@@ -8,6 +8,9 @@ from constants import *
 
 # domino_area = pygame.Rect(-1257, -637, 58, 96)
 
+# Global dictionary to store loaded textures
+texture_cache = {}
+
 def scale_texture(scaleX, scaleY):
     glPushMatrix()
     glScalef(scaleX, scaleY, 0)
@@ -20,7 +23,9 @@ def rotate_texture(angle):
 
 def convert_coordinates(mouse_coord):
     opengl_x = (mouse_coord[0] - WIDTH / 2) * (2 / WIDTH) * 1400
+    # print(f"mouse_coord[0] - WIDTH / 2: {mouse_coord[0] - WIDTH / 2}")
     opengl_y = (HEIGHT / 2 - mouse_coord[1]) * (2 / HEIGHT) * 800
+    # print(f"opengl_x, opengl_y: ({opengl_x}, {opengl_y})")
     return opengl_x, opengl_y
 
 
@@ -43,18 +48,16 @@ class GameObject(pygame.sprite.Sprite):
         self.change_vals = False
     
     def load_texture(self, image_path):
-        global img_width, img_height, img_rect
-        textureSurface = pygame.image.load(image_path)
-        textureSurfaceForRect = pygame.image.load(image_path).convert_alpha()
+        global img_width, img_height
+        textureSurface = pygame.image.load(image_path).convert_alpha()
         textureData = pygame.image.tostring(textureSurface, "RGBA", 1)
         img_width = textureSurface.get_width()
         img_height = textureSurface.get_height()
-        img_rect = textureSurfaceForRect.get_rect()
         texture = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D, texture)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img_width, img_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData)
 
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        # glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
 
         return texture
@@ -80,11 +83,9 @@ class GameObject(pygame.sprite.Sprite):
 
         self.width = img_width
         self.height = img_height
-        self.image = scale_texture(self.width*self.x_scale, self.height*self.y_scale)
-        self.image = rotate_texture(self.orientation)
-        self.object_rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        # print(f"self.x, self.y: ({self.x}, {self.y})")
-        # print(f"self.object_rect: {self.object_rect}")
+        scale_texture(self.width*self.x_scale, self.height*self.y_scale)
+        rotate_texture(self.orientation)
+        self.object_rect = pygame.Rect((self.x-(self.width)), (self.y-(self.height)), (self.width*2), (self.height*2))
 
         if self.change_vals:
             self.change_orientation(180)
@@ -93,23 +94,16 @@ class GameObject(pygame.sprite.Sprite):
         self.image = self.load_texture(path)
 
     def refresh_sprite(self):
-        self.image = scale_texture(self.width*self.x_scale, self.height*self.y_scale)
+        scale_texture(self.width*self.x_scale, self.height*self.y_scale)
         # self.object_rect = img_rect
-        self.object_rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.object_rect = pygame.Rect((self.x-(self.width/2)), (self.y-(self.height/2)), self.width, self.height)
 
     def update(self):
         self.refresh_sprite()
-        # mouse_position = pygame.mouse.get_pos()
-        # GlCoord = convert_coordinates(mouse_position)
-        # print(f"Mouse pos_OpenGL: {GlCoord}")
-        # print(f"self.x = {self.x}, self.y = {self.y}")
-        # self.object_rect.center = (img_width, img_height)
+        # self.object_rect.center = (self.x, self.y)
         self.object_rect.center = (self.x, self.y)
 
     def is_colliding(self, position):
-        # self.object_rect = img_rect
-        # print(f"self.object_rect: {self.object_rect}")
-        # print(f"collide point: {position}")
         if self.object_rect.collidepoint(position):
             print("colliding!")
             return True
@@ -128,14 +122,14 @@ class GameObject(pygame.sprite.Sprite):
 
     def add_position(self, x, y):
         self.position = np.array([x, y])
-        # print(f"position in add_position at objects.py: {self.position}")
+        print(f"position in add_position at objects.py: {self.position}")
         self.x = x
         self.y = y
 
     def change_orientation(self, new_orientation):
         self.orientation = new_orientation
-        self.image = rotate_texture(self.orientation)
-        self.object_rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        rotate_texture(self.orientation)
+        self.object_rect = pygame.Rect((self.x-(self.width/2)), (self.y-(self.height/2)), self.width, self.height)
 
     def give_rect(self):
         return self.object_rect
@@ -220,6 +214,7 @@ class Domino(GameObject):
         x, y = super().give_position()
         mouse_position = pygame.mouse.get_pos()
         GlCoord = convert_coordinates(mouse_position)
+        # print(f"GlCoord: {GlCoord}")
         if super().is_colliding(GlCoord) and self.placed == False and self.in_screen == True:
             # print("UPDATE DI COLLIDING DOMINO")
             if self.empty:
@@ -227,7 +222,7 @@ class Domino(GameObject):
                 self.jump = False
 
             if self.jump:
-                # print("UPDATE DI JUMP DOMINO")
+                print("NGEHOVER DI UPDATE")
                 self.on_hover()
       
         else:
@@ -243,10 +238,13 @@ class Domino(GameObject):
 
     def on_hover(self): # on_hover = ketika domino di hover
         print("on_hover domino")
-        pixels_to_move = 2 # pixels to move is the amount of pixels the domino will move when hovered
+        pixels_to_move = 20 # pixels to move is the amount of pixels the domino will move when hovered
         self.y -= pixels_to_move
         
-        new_height = self.object_rect.height + pixels_to_move*2
+        self.image = scale_texture(self.width*self.x_scale, self.height*self.y_scale)
+
+        print(f"self.object_rect.height: {self.object_rect.height}")
+        new_height = self.object_rect.height + pixels_to_move
         self.object_rect.height = new_height
         self.object_rect.center = (self.x, self.y)
         self.jump = False

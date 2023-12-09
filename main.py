@@ -10,9 +10,15 @@ import pygame
 import time
 import sys
 
+# Global dictionary to store loaded textures
+texture_cache = {}
+
 # digunakan untuk memproses gambar menjadi texture
 def load_texture(image_path):
-    textureSurface = pygame.image.load(image_path)
+        # Check if the texture is already in the cache
+    if image_path in texture_cache:
+        return texture_cache[image_path]
+    textureSurface = pygame.image.load(image_path).convert_alpha()
     textureData = pygame.image.tostring(textureSurface, "RGBA", 1)
 
     # mendapatkan ukuran texture
@@ -23,7 +29,7 @@ def load_texture(image_path):
     glBindTexture(GL_TEXTURE_2D, textureId)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData)
 
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+    # glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
     return textureId
 
@@ -143,7 +149,7 @@ def display_init():
 class Table():
     def __init__(self): # fungsi yang akan dijalankan ketika objek Table dibuat, Table adalah objek yang merepresentasikan meja permainan
         self.turn = 0 # giliran pemain
-        self.spacing = 95 # jarak antar kartu (TAK UBAH DARI SEBELUMNYA 96)
+        self.spacing = 145 # jarak antar kartu (TAK UBAH DARI SEBELUMNYA 96)
         self.first_game = True # atribut yang menandakan apakah game ini adalah game pertama atau tidak
         self.dominoes = np.array([], dtype=object) # list yang berisi semua kartu domino yang ada di game, dtype=object digunakan agar list dapat menyimpan objek diantaranya (string, integer, float, array lain, dll)
         self.table_dominoes = np.array([], dtype=object) # list yang berisi semua kartu domino yang ada di meja
@@ -185,7 +191,7 @@ class Table():
         extra_domino = load_texture(f"assets/Dominos (Interface)/+.png")
         # WINDOW.blit(extra_domino, (self.extra_x, self.extra_y))
         # print(f"line 265:\nself.extra_x: {self.extra_x}, self.extra_y: {self.extra_y}")
-        display_normal_texture(self.extra_x, self.extra_y, 0.30, 0.30, extra_domino)
+        display_normal_texture(self.extra_x, self.extra_y, 35, 35, extra_domino)
 
     def draw_player_number(self, player_number):
         global player_to_play
@@ -198,7 +204,7 @@ class Table():
     def draw_player_dominoes(self, player_idx):
         if PLAYERS[player_idx].manual:
             x_padding = 136.5
-            y_padding = 160
+            y_padding = 260
 
             x, y = -1275, -637
             aux = 1
@@ -243,7 +249,7 @@ class Table():
         return len(self.table_dominoes) == 0
     
     def create_right_positions(self):
-        right_x, right_y = 75, 0
+        right_x, right_y = 145, 0
 
         self.right_positions.append([right_x, right_y])
         for _ in range(5):
@@ -276,7 +282,7 @@ class Table():
         self.right_positions = np.array(self.right_positions)
 
     def create_left_positions(self):
-        left_x, left_y = -75, 0
+        left_x, left_y = -145, 0
 
         self.left_positions.append([left_x, left_y])
         for _ in range(5):
@@ -378,17 +384,17 @@ class Table():
 
     def left_placement(self, domino):
         domino.change_orientation_sprite()
-        if self.left_iterator >= 6 and self.left_iterator <= 8:
+        if self.left_iterator >= 85 and self.left_iterator <= 87:
             domino.change_orientation_sprite()
             domino.view_horizontal()
 
-        elif self.left_iterator >= 8 and self.left_iterator <= 18:
+        elif self.left_iterator >= 87 and self.left_iterator <= 89:
             domino.change_orientation_sprite()
 
-        elif self.left_iterator >= 18 and self.left_iterator <= 19:
+        elif self.left_iterator >= 89 and self.left_iterator <= 95:
             domino.view_horizontal()
         
-        elif self.left_iterator >= 19:
+        elif self.left_iterator >= 95:
             domino.view_vertical()
             
         self.table_dominoes = np.insert(self.table_dominoes, 0, domino)
@@ -399,23 +405,23 @@ class Table():
 
     def right_placement(self, domino):
         domino.change_orientation_sprite()
-        if self.right_iterator >= 6 and self.right_iterator <= 9:
+        if self.right_iterator >= 85 and self.right_iterator <= 88:
             domino.change_orientation_sprite()
             domino.view_horizontal()
 
-        elif self.right_iterator >= 9 and self.right_iterator <= 15:
+        elif self.right_iterator >= 88 and self.right_iterator <= 90:
             domino.change_orientation_sprite()
 
-        elif self.right_iterator >= 15 and self.right_iterator <= 17:
+        elif self.right_iterator >= 90 and self.right_iterator <= 95:
             domino.view_horizontal()
 
-        elif self.right_iterator >= 17 and self.right_iterator <= 23:
+        elif self.right_iterator >= 95 and self.right_iterator <= 101:
             domino.change_orientation_sprite()
         
-        elif self.right_iterator >= 23 and self.right_iterator <= 24:
+        elif self.right_iterator >= 101 and self.right_iterator <= 103:
             domino.view_horizontal()
 
-        elif self.right_iterator >= 24:
+        elif self.right_iterator >= 103:
             domino.view_vertical()
 
         self.table_dominoes = np.append(self.table_dominoes, domino)
@@ -432,8 +438,8 @@ class Table():
         num_x, num_y = 1140, 715
         num_x_scale, num_y_scale = 30, 45
         # tanda panah giliran player
-        turn_x, turn_y = 234, 222
-        turn_x_scale, turn_y_scale = 85, 45
+        turn_x, turn_y = 960, 715
+        turn_x_scale, turn_y_scale = 65, 35
         sprite_added = True
 
         for player in PLAYERS:
@@ -451,7 +457,7 @@ class Table():
                 # player_turn = pygame.image.load(f"assets/Dominos (Interface)/turn.png").convert_alpha()
                 player_turn = load_texture(f"assets/Dominos (Interface)/turn.png")
                 # self.extra_x, self.extra_y = turn_x - 46, turn_y - 6
-                self.extra_x, self.extra_y = turn_x - 46, turn_y - 6
+                self.extra_x, self.extra_y = turn_x - 126, turn_y + 46
                 
                 if self.extra_domino and sprite_added:
                     self.extra_domino_sprite()
@@ -937,13 +943,6 @@ class MinimaxSolver():
             beta = min(beta, min_utility)
         return min_child, min_utility
 
-    # BACKGROUND = pygame.image.load(f"assets/Table({PLAYERS_NUM}).png").convert_alpha()
-    # WINDOW.blit(BACKGROUND, (0, 0))
-    # WINDOW.blit(player_to_play, PLAYER_NUM_pos)
-    # WINDOW.blit(PLAYER__, PLAYER__pos)
-        # WINDOW.blit(can_play, can_play_pos)
-        # WINDOW.blit(turn, turn_pos)
-
 def update_layers(): # fungsi yang akan mengupdate semua layer yang ada di game
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     BACKGROUND = load_texture(f"assets/Table({PLAYERS_NUM}).png")
@@ -999,7 +998,7 @@ def run():
     global turn
     global TURN
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    # glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     table = Table()
     table.start_game()
     gameManager = GameManager()
@@ -1191,12 +1190,6 @@ def intro():
     if skip != True:
         time.sleep(SLEEP_TIME*3.6)
 
-
-def check_gl_error():
-    error = glGetError()
-    if error != GL_NO_ERROR:
-        print(f"OpenGL Error: {error}")
-
 def main():
     global OBJECTS, LAYERS, PLAYERS_NUM, WINDOW, SLEEP_TIME, PLAYERS, last_players_num
     display_init()
@@ -1290,8 +1283,7 @@ def main():
                     PLAYERS[0].change_auto()
 
         pygame.display.flip()
-        pygame.time.wait(1000)
+        pygame.time.wait(10)
 
 
-if __name__ == "__main__":
-    main()
+main()
