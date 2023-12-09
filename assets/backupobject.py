@@ -6,7 +6,6 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from constants import *
 
-# domino_area = pygame.Rect(-1257, -637, 58, 96)
 
 def scale_texture(scaleX, scaleY):
     glPushMatrix()
@@ -18,30 +17,30 @@ def rotate_texture(angle):
     glRotatef(angle, 0, 0, 0) 
     glPopMatrix()
 
-def load_texture(image_path):
-    global img_width, img_height
-    textureSurface = pygame.image.load(image_path)
-    textureData = pygame.image.tostring(textureSurface, "RGBA", 1)
-    img_width = textureSurface.get_width()
-    # print(f"img_width: {img_width}")
-    img_height = textureSurface.get_height()
-    # print(f"img_height: {img_height}")
-    texture = glGenTextures(1)
-    glBindTexture(GL_TEXTURE_2D, texture)
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img_width, img_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData)
+# def load_texture(image_path):
+#     global img_width, img_height
+#     textureSurface = pygame.image.load(image_path)
+#     textureData = pygame.image.tostring(textureSurface, "RGBA", 1)
+#     img_width = textureSurface.get_width()
+#     # print(f"img_width: {img_width}")
+#     img_height = textureSurface.get_height()
+#     # print(f"img_height: {img_height}")
+#     texture = glGenTextures(1)
+#     glBindTexture(GL_TEXTURE_2D, texture)
+#     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img_width, img_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData)
 
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+#     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+#     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
 
-    return texture
+#     return texture
 
-def display_normal_texture(posX, posY, scaleX, scaleY, jenis_texture):
-    glBindTexture(GL_TEXTURE_2D, jenis_texture)
-    glPushMatrix()
-    glTranslatef(posX, posY, 1.0)  # Adjust the z-coordinate to place the button in front of the background
-    glScalef(scaleX, scaleY, 0) 
-    cube()
-    glPopMatrix()
+# def display_normal_texture(posX, posY, scaleX, scaleY, jenis_texture):
+#     glBindTexture(GL_TEXTURE_2D, jenis_texture)
+#     glPushMatrix()
+#     glTranslatef(posX, posY, 1.0)  # Adjust the z-coordinate to place the button in front of the background
+#     glScalef(scaleX, scaleY, 0) 
+#     cube()
+#     glPopMatrix()
 
 def convert_coordinates(mouse_coord):
     # print(f"mouse_coord: {mouse_coord}")
@@ -132,19 +131,36 @@ class GameObject(pygame.sprite.Sprite):
 
     def update(self):
         self.refresh_sprite()
-        # print(f"self.x diupdate: {self.x}, self.y diupdate: {self.y}")
+        print(f"self.x diupdate: {self.x}, self.y diupdate: {self.y}")
         self.x = self.bounding_box.right
         self.y = self.bounding_box.top
 
     def is_colliding(self, position):
-        # global domino_area
-        domino_area = pygame.Rect(position[0], position[1], 58, 96)
-        if domino_area.collidepoint(position):
-            print("colliding!")
+        glCoord = convert_coordinates(position)
+        x, y = glCoord[0], glCoord[1]
+        transformed_x = x - self.width
+        transformed_y = y - self.height
+        # Adjust bounding box coordinates based on the orientation
+        left = self.bounding_box.left
+        right = self.bounding_box.right
+        top = self.bounding_box.top
+        bottom = self.bounding_box.bottom
+        print(f"img_width: {self.width}, img_height: {self.height}")
+        print(f"pyame is_colliding at objects.py: {position}")
+        print(f"x: {x}, y: {y}")
+        print(f"openGL in is_colliding at objects.py: {glCoord}")
+        print(f"transformed_x: {transformed_x}, transformed_y: {transformed_y}")
+        print(f"left: {left}, right: {right}, top: {top}, bottom: {bottom}")
+        # print(f"Self.x: {self.x}, Self.y: {self.y}")
+        if left <= transformed_x <= right and bottom <= transformed_y <= top:
+            print("COLLIDING")
             return True
         else:
+            print("NOT COLLIDING")
             return False
-
+        # return self.bounding_box.left <= x <= self.bounding_box.right and \
+        # self.bounding_box.top <= y <= self.bounding_box.bottom
+    
     def change_sprite(self, path):
         self.load_image(path)
     
@@ -156,13 +172,15 @@ class GameObject(pygame.sprite.Sprite):
 
     def add_position(self, x, y):
         self.position = np.array([x, y])
-        # print(f"position in add_position at objects.py: {self.position}")
+        print(f"position in add_position at objects.py: {self.position}")
         self.x = x
         self.y = y
 
     def change_orientation(self, new_orientation):
         self.orientation = new_orientation
+        # self.image = pygame.transform.rotate(self.image, self.orientation)
         self.image = rotate_texture(self.orientation)
+        # self.rect = self.image.get_rect()
         self.bounding_box = BoundingBox(-self.width / 2, self.width / 2, -self.height / 2, self.height / 2)
 
     def give_rect(self):

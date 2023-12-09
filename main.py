@@ -10,48 +10,42 @@ import pygame
 import time
 import sys
 
-
 # digunakan untuk memproses gambar menjadi texture
 def load_texture(image_path):
     textureSurface = pygame.image.load(image_path)
     textureData = pygame.image.tostring(textureSurface, "RGBA", 1)
+
+    # mendapatkan ukuran texture
     width = textureSurface.get_width()
     height = textureSurface.get_height()
-    texture = glGenTextures(1)
-    glBindTexture(GL_TEXTURE_2D, texture)
+
+    textureId = glGenTextures(1)
+    glBindTexture(GL_TEXTURE_2D, textureId)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData)
 
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+    return textureId
 
-    return texture
 
 # digunakan untuk menampilkan texture KHUSUS BACKGROUND
 def display_bg_texture(jenis_texture):
-    global TableXSize, TableYSize
     glEnable(GL_TEXTURE_2D)
-
-    # Draw the background
     glBindTexture(GL_TEXTURE_2D, jenis_texture)
     glPushMatrix()
     glTranslatef(0.0, 0.0, 0.0)  # Adjust the z-coordinate to place the button in front of the background
-    # print(f"scale_X: {scale_X}, scale_Y: {scale_Y}")
-    glScalef(TableXSize, TableYSize, 0)  # Adjust the coordinates and size of the button
+    glScalef(TableXSize, TableYSize, 0)  # Scaling background hingga sesuai dengan ukuran window
     cube()
     glPopMatrix()
-    # glDisable(GL_TEXTURE_2D)
 
 # digunakan untuk menampilkan semua texture selain BACKGROUND
 def display_normal_texture(posX, posY, scaleX, scaleY, jenis_texture):
-    # Draw the button
-    # glEnable(GL_TEXTURE_2D) # KEMUNGKINAN NGEBUG
     glBindTexture(GL_TEXTURE_2D, jenis_texture)
     glPushMatrix()
-    # Adjust the coordinates and size of the button
-    glTranslatef(posX, posY, 2.5)  # Adjust the z-coordinate to place the button in front of the background
+    glTranslatef(posX, posY, 1.0)  
     glScalef(scaleX, scaleY, 0) 
     cube()
     glPopMatrix()
-    # glDisable(GL_TEXTURE_2D)
 
 # digunakan untuk men-setting layar + variabel-variable yang dibutuhkan
 def display_init():
@@ -63,9 +57,9 @@ def display_init():
     material_diffuse = (0.7, 0.7, 0.7, 1.0)
     material_specular = (0.5, 0.5, 0.5, 1)
     pygame.init()
-    # WIDTH, HEIGHT = 1400, 800
     screen_size = (WIDTH, HEIGHT)
     WINDOW = pygame.display.set_mode(screen_size, DOUBLEBUF | OPENGL)
+    print(f"Window: {WINDOW}")
     
 
     pygame.display.set_caption('TheMino: Ordinary Domino Game')
@@ -80,8 +74,16 @@ def display_init():
     glMaterialfv(GL_FRONT, GL_DIFFUSE, material_diffuse)
     glMaterialfv(GL_FRONT, GL_SPECULAR, material_specular)
 
-    gluPerspective(70, (screen_size[0] / screen_size[1]), 0.1, 50.0)
-    glTranslatef(0.0, 0.0, -12.0)
+    # gluPerspective(70, (screen_size[0] / screen_size[1]), 0.1, 50.0)
+    # glTranslatef(0.0, 0.0, -12.0)
+    # Memasang Ortho
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    gluOrtho2D(-1400, 1400, -800, 800)
+    glMatrixMode(GL_MODELVIEW)
+    # glPushMatrix()
+    # glTranslatef(0.0, 0.0, -7.0)
+    # glPopMatrix()
     glLightfv(GL_LIGHT0, GL_POSITION, (1, 1, -1, 0))
 
 
@@ -195,37 +197,29 @@ class Table():
 
     def draw_player_dominoes(self, player_idx):
         if PLAYERS[player_idx].manual:
-            # print("TRUE MANUAL MASBRO")
-            x_padding = 1.14
-            y_padding = 1.6
+            x_padding = 136.5
+            y_padding = 160
 
-            # x, y = -3.0, -3.6
-            x, y = -10.68, -5.25
+            x, y = -1275, -637
             aux = 1
 
             for domino in PLAYERS[player_idx].dominoes:
-                # glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-                # print(f"PLAYERS[player_idx].dominoes: {PLAYERS}")
-                # print(f"domino: {domino}")
                 if domino not in OBJECTS:
-                    # print("domino not in OBJECTS")
                     OBJECTS.append(domino)
 
                 domino.add_position(x, y)
                 domino.show()
 
                 if aux == 7:
-                    # print("aux == 7")
-                    # x, y = -3.0, -3.6
-                    x, y = -10.68, -5.25
-                    y -= y_padding
+                    x, y = -1275, -637
+                    y += y_padding
                     aux = 0
 
-                    y_padding += 0.5
+                    y_padding += 50
                 
                 else:
                     x += x_padding
-                    pass
+                    # pass
 
                 aux += 1 
 
@@ -238,9 +232,7 @@ class Table():
                     domino.hide()
 
     def draw_extra_dominoes(self):
-        self.extra_dominoes = Domino([7, 7], x=-2.55, y=-5.25) 
-        # self.extra_dominoes = Domino([7, 7], x=64, y=717)
-        # print(f"self.extra_dominoes line 299: {self.extra_dominoes}")
+        self.extra_dominoes = Domino([7, 7], x=-305, y=-637) 
         OBJECTS.insert(0, self.extra_dominoes)
 
     def hide_extra_dominoes(self):
@@ -251,7 +243,7 @@ class Table():
         return len(self.table_dominoes) == 0
     
     def create_right_positions(self):
-        right_x, right_y = -3.0, -2.0
+        right_x, right_y = 745, 360
 
         self.right_positions.append([right_x, right_y])
         for _ in range(5):
@@ -284,7 +276,7 @@ class Table():
         self.right_positions = np.array(self.right_positions)
 
     def create_left_positions(self):
-        left_x, left_y = -3,0
+        left_x, left_y = 605,360
 
         self.left_positions.append([left_x, left_y])
         for _ in range(5):
@@ -338,7 +330,7 @@ class Table():
             if self.side == "none":
                 self.table_dominoes = np.insert(self.table_dominoes, 0, domino)
                 domino.change_orientation_sprite()
-                domino.add_position(2.5, -4)
+                domino.add_position(700, 360)
 
             if self.side == "left" and domino.vals[1] != self.table_dominoes[0].vals[0] or self.side == "right" and domino.vals[0] != self.table_dominoes[-1].vals[-1]:
                 domino.change_orientation_vals()     
@@ -433,12 +425,15 @@ class Table():
         self.right_iterator += 1
 
     def players_dominoes(self):
-        x, y = 10.675, 4.91
-        x_scale, y_scale = 0.7, 0.175
-        num_x, num_y = 9.6, 4.91
-        num_x_scale, num_y_scale = 0.3, 0.40
-        turn_x, turn_y = 8.1, 4.91
-        turn_x_scale, turn_y_scale = 0.5, 0.30
+        # sisa domino pemain
+        x, y = 1260, 715
+        x_scale, y_scale = 85, 22
+        # nomor player
+        num_x, num_y = 1140, 715
+        num_x_scale, num_y_scale = 30, 45
+        # tanda panah giliran player
+        turn_x, turn_y = 234, 222
+        turn_x_scale, turn_y_scale = 85, 45
         sprite_added = True
 
         for player in PLAYERS:
@@ -466,17 +461,12 @@ class Table():
                 # player_turn = pygame.image.load(f"assets/Dominos (Interface)/0.png").convert_alpha()
                 player_turn = load_texture(f"assets/Dominos (Interface)/0.png")
 
-            # WINDOW.blit(player_turn, (turn_x, turn_y))
             display_normal_texture(turn_x, turn_y, turn_x_scale, turn_y_scale, player_turn)
-            # WINDOW.blit(num_dominoes, (x, y))
-            # display_normal_texture(x, y, num_dominoes)
             display_normal_texture(x, y, x_scale, y_scale, num_dominoes)
-            # WINDOW.blit(player_num, (num_x, num_y))
-            # display_normal_texture(num_x, num_y, player_num)
             display_normal_texture(num_x, num_y, num_x_scale, num_y_scale, player_num)
 
-            y += 1.075
-            num_y += 1.075
+            y -= 125
+            num_y -= 125
             turn_y += 1.04
 
     def activate_arrows(self):
@@ -486,8 +476,8 @@ class Table():
 
         self.right_arrow.add_position(-1, -4.0)
         self.left_arrow.add_position(0.5, -4.0)
-        self.right_arrow.activate()
-        self.left_arrow.activate()
+        self.right_arrow.show()
+        self.left_arrow.show()
 
         if self.left_arrow not in OBJECTS and self.right_arrow not in OBJECTS:
             OBJECTS.insert(1, self.left_arrow)
@@ -510,12 +500,14 @@ class Table():
         FULLSCREEN = Button("FULLSCREEN_button1.png")
         EXIT = Button("EXIT_button1.png")
 
-        x, y = -1.71, -4.63
+        x, y = -204, -712
+        # x, y = -11.76, 6.75
         buttons = [PASS, REPEAT, FULLSCREEN, EXIT]
 
         for button in buttons:
             button.add_position(x, y)
-            y -= 0.43
+            # y -= 0.43
+            y += 51.85
 
         for button in buttons:
             button.show()
@@ -998,7 +990,6 @@ def domino_sound():
     dominoNum = random.randint(0, 26) # berguna untuk memilih suara domino yang akan diputar
     DOMINO_SOUND =  pygame.mixer.Sound(f'assets/Audio/domino{dominoNum}.wav') # memilih suara domino yang akan diputar
     DOMINO_SOUND.play() # memutar suara domino
-
 
 def run():
     global gameManager

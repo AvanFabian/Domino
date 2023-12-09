@@ -35,6 +35,7 @@ class GameObject(pygame.sprite.Sprite):
 
         self.image = pygame.transform.scale(self.image, (self.image.get_width()*self.x_scale, self.image.get_height()*self.y_scale))
         self.image = pygame.transform.rotate(self.image, self.orientation)
+        # print(f"self.image: {self.image}")
         self.rect = self.image.get_rect()
 
         if self.change_vals:
@@ -52,8 +53,12 @@ class GameObject(pygame.sprite.Sprite):
         self.rect.center = (self.x, self.y) 
 
     def is_colliding(self, position):
-        # print(f"position in is_colliding at originalobjects.py: {position}")
-        return self.rect.collidepoint(position)
+        
+        if self.rect.collidepoint(position):
+            print("colliding!")
+            return True
+        else:
+            return False
     
     def change_sprite(self, path):
         self.load_image(path)
@@ -80,6 +85,7 @@ class GameObject(pygame.sprite.Sprite):
         return self.rect
     
     def give_position(self):
+        print(f"self.x = {self.x}, self.y = {self.y}")
         return self.x, self.y
 
     def destroy(self):

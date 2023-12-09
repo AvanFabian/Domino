@@ -138,6 +138,7 @@ class Table():
                 
                 else:
                     x += x_padding
+                    pass
 
                 aux += 1 
 
@@ -412,7 +413,7 @@ class Table():
 
         for button in buttons:
             button.add_position(x, y)
-            y += 26
+            # y += 26
 
         for button in buttons:
             button.activate()

@@ -2,8 +2,8 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 WIDTH, HEIGHT = 1400, 800
-TableXSize = 14.85
-TableYSize = 8.4
+TableXSize = 1400
+TableYSize = 800
 
 # create 3D cube
 vertices = (
