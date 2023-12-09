@@ -143,7 +143,7 @@ def display_init():
 class Table():
     def __init__(self): # fungsi yang akan dijalankan ketika objek Table dibuat, Table adalah objek yang merepresentasikan meja permainan
         self.turn = 0 # giliran pemain
-        self.spacing = 0.25 # jarak antar kartu (TAK UBAH DARI SEBELUMNYA 96)
+        self.spacing = 95 # jarak antar kartu (TAK UBAH DARI SEBELUMNYA 96)
         self.first_game = True # atribut yang menandakan apakah game ini adalah game pertama atau tidak
         self.dominoes = np.array([], dtype=object) # list yang berisi semua kartu domino yang ada di game, dtype=object digunakan agar list dapat menyimpan objek diantaranya (string, integer, float, array lain, dll)
         self.table_dominoes = np.array([], dtype=object) # list yang berisi semua kartu domino yang ada di meja
@@ -243,7 +243,7 @@ class Table():
         return len(self.table_dominoes) == 0
     
     def create_right_positions(self):
-        right_x, right_y = 745, 360
+        right_x, right_y = 75, 0
 
         self.right_positions.append([right_x, right_y])
         for _ in range(5):
@@ -276,7 +276,7 @@ class Table():
         self.right_positions = np.array(self.right_positions)
 
     def create_left_positions(self):
-        left_x, left_y = 605,360
+        left_x, left_y = -75, 0
 
         self.left_positions.append([left_x, left_y])
         for _ in range(5):
@@ -330,7 +330,7 @@ class Table():
             if self.side == "none":
                 self.table_dominoes = np.insert(self.table_dominoes, 0, domino)
                 domino.change_orientation_sprite()
-                domino.add_position(700, 360)
+                domino.add_position(0, 0)
 
             if self.side == "left" and domino.vals[1] != self.table_dominoes[0].vals[0] or self.side == "right" and domino.vals[0] != self.table_dominoes[-1].vals[-1]:
                 domino.change_orientation_vals()     
@@ -451,7 +451,7 @@ class Table():
                 # player_turn = pygame.image.load(f"assets/Dominos (Interface)/turn.png").convert_alpha()
                 player_turn = load_texture(f"assets/Dominos (Interface)/turn.png")
                 # self.extra_x, self.extra_y = turn_x - 46, turn_y - 6
-                self.extra_x, self.extra_y = turn_x-1.1, turn_y+1.45
+                self.extra_x, self.extra_y = turn_x - 46, turn_y - 6
                 
                 if self.extra_domino and sprite_added:
                     self.extra_domino_sprite()
@@ -474,8 +474,8 @@ class Table():
             self.left_arrow.change_orientation_sprite()
             self.left_arrow_orientation = False
 
-        self.right_arrow.add_position(-1, -4.0)
-        self.left_arrow.add_position(0.5, -4.0)
+        self.right_arrow.add_position(-255, -637)
+        self.left_arrow.add_position(-305, -637)
         self.right_arrow.show()
         self.left_arrow.show()
 
@@ -968,7 +968,7 @@ def update_layers(): # fungsi yang akan mengupdate semua layer yang ada di game
 
     for _, layer in LAYERS.items():
         # print(f"layer line 1039: {layer}")
-        # layer.update()
+        layer.update()
         # layer.draw(WINDOW)
         for obj in layer.sprites():
             # print(f"obj line 1043: {obj}")

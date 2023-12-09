@@ -18,46 +18,10 @@ def rotate_texture(angle):
     glRotatef(angle, 0, 0, 0) 
     glPopMatrix()
 
-def load_texture(image_path):
-    global img_width, img_height
-    textureSurface = pygame.image.load(image_path)
-    textureData = pygame.image.tostring(textureSurface, "RGBA", 1)
-    img_width = textureSurface.get_width()
-    # print(f"img_width: {img_width}")
-    img_height = textureSurface.get_height()
-    # print(f"img_height: {img_height}")
-    texture = glGenTextures(1)
-    glBindTexture(GL_TEXTURE_2D, texture)
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img_width, img_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData)
-
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-
-    return texture
-
-def display_normal_texture(posX, posY, scaleX, scaleY, jenis_texture):
-    glBindTexture(GL_TEXTURE_2D, jenis_texture)
-    glPushMatrix()
-    glTranslatef(posX, posY, 1.0)  # Adjust the z-coordinate to place the button in front of the background
-    glScalef(scaleX, scaleY, 0) 
-    cube()
-    glPopMatrix()
-
-def convert_coordinates(mouse_coord):
-    # print(f"mouse_coord: {mouse_coord}")
-    opengl_x = (mouse_coord[0] - WIDTH / 2) * (2 / WIDTH) * 1400
-    opengl_y = (HEIGHT / 2 - mouse_coord[1]) * (2 / HEIGHT) * 800
-    # print(f"opengl_x: {opengl_x}")
-    # print(f"opengl_y: {opengl_y}")
-    return opengl_x, opengl_y
-
-class BoundingBox:
-    # BoundingBox class for representing a rectangular bounding box
-    def __init__(self, left, right, bottom, top):
-        self.left = left
-        self.right = right
-        self.bottom = bottom
-        self.top = top
+# def convert_coordinates(mouse_coord):
+#     opengl_x = (mouse_coord[0] - WIDTH / 2) * (2 / WIDTH) * 1400
+#     opengl_y = (HEIGHT / 2 - mouse_coord[1]) * (2 / HEIGHT) * 800
+#     return opengl_x, opengl_y
 
 
 class GameObject(pygame.sprite.Sprite):
@@ -68,24 +32,24 @@ class GameObject(pygame.sprite.Sprite):
         self.layer = layer
         self.x_scale = x_scale
         self.y_scale = y_scale
+        self.object_rect = None
         self.position = np.array([x, y])
         self.orientation = orientation
         self.load_image(img_path)
         self.image_path = img_path
         self.width = img_width
         self.height = img_height
-        self.bounding_box = BoundingBox(0, 0, 0, 0)  # Initialize a default bounding box
         self.blank_path = os.path.join("assets", "Dominos (Interface)", "0.png")
         self.change_vals = False
     
     def load_texture(self, image_path):
-        global img_width, img_height
+        global img_width, img_height, img_rect
         textureSurface = pygame.image.load(image_path)
+        textureSurfaceForRect = pygame.image.load(image_path).convert_alpha()
         textureData = pygame.image.tostring(textureSurface, "RGBA", 1)
         img_width = textureSurface.get_width()
-        # print(f"img_width: {img_width}")
         img_height = textureSurface.get_height()
-        # print(f"img_height: {img_height}")
+        img_rect = textureSurfaceForRect.get_rect()
         texture = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D, texture)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img_width, img_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData)
@@ -118,7 +82,8 @@ class GameObject(pygame.sprite.Sprite):
         self.height = img_height
         self.image = scale_texture(self.width*self.x_scale, self.height*self.y_scale)
         self.image = rotate_texture(self.orientation)
-        self.bounding_box = BoundingBox(-self.width / 2, self.width / 2, -self.height / 2, self.height / 2)
+        self.object_rect = img_rect
+        # print(f"self.object_rect: {self.object_rect}") 
 
         if self.change_vals:
             self.change_orientation(180)
@@ -128,21 +93,21 @@ class GameObject(pygame.sprite.Sprite):
 
     def refresh_sprite(self):
         self.image = scale_texture(self.width*self.x_scale, self.height*self.y_scale)
-        self.bounding_box = BoundingBox(-self.width / 2, self.width / 2, -self.height / 2, self.height / 2)
+        # self.bounding_box = BoundingBox(-self.width / 2, self.width / 2, -self.height / 2, self.height / 2)
+        self.object_rect = img_rect
 
     def update(self):
         self.refresh_sprite()
-        # print(f"self.x diupdate: {self.x}, self.y diupdate: {self.y}")
-        self.x = self.bounding_box.right
-        self.y = self.bounding_box.top
+        print(f"self.x = {self.x}, self.y = {self.y}")
+        # self.object_rect.center = (img_width, img_height)
+        self.object_rect.center = (self.x, self.y)
 
     def is_colliding(self, position):
-        # global domino_area
-        domino_area = pygame.Rect(position[0], position[1], 58, 96)
-        if domino_area.collidepoint(position):
+        if self.object_rect.collidepoint(position):
             print("colliding!")
             return True
         else:
+            # print("not colliding")
             return False
 
     def change_sprite(self, path):
@@ -163,15 +128,12 @@ class GameObject(pygame.sprite.Sprite):
     def change_orientation(self, new_orientation):
         self.orientation = new_orientation
         self.image = rotate_texture(self.orientation)
-        self.bounding_box = BoundingBox(-self.width / 2, self.width / 2, -self.height / 2, self.height / 2)
+        self.object_rect = img_rect
 
     def give_rect(self):
-        # return self.rect
-        print(f"rect in objects.py line 211: {self.bounding_box}")
-        return self.bounding_box
+        return self.object_rect
     
     def give_position(self):
-        print(f"Given position | self.x = {self.x}, self.y = {self.y}")
         return self.x, self.y
 
     def destroy(self):
@@ -185,7 +147,6 @@ class Domino(GameObject):
         self.empty = False
         self.extra = False
         self.jump = True
-        # print(f"VALS in objects.py line 106 : {vals}")
 
         if vals[0] == vals[1]:
             self.acotao = True
@@ -203,7 +164,7 @@ class Domino(GameObject):
             self.in_screen = False
 
         super().__init__(img_path=os.path.join("assets", "Dominos (Game)", self.path), x_scale=56.75, y_scale=96.0, orientation=0, **kwargs)
-        self.rect = super().give_rect()
+        self.object_rect = super().give_rect()
 
     def __copy__(self):
         new_instance = Domino(list(self.vals))
@@ -214,7 +175,7 @@ class Domino(GameObject):
         new_instance.acotao = self.acotao
         new_instance.in_screen = self.in_screen
         new_instance.path = self.path
-        new_instance.rect = self.rect.copy()
+        new_instance.object_rect = self.object_rect
 
         return new_instance
 
@@ -251,18 +212,21 @@ class Domino(GameObject):
     def update(self):
         x, y = super().give_position()
         if super().is_colliding(pygame.mouse.get_pos()) and self.placed == False and self.in_screen == True:
+            # print("UPDATE DI COLLIDING DOMINO")
             if self.empty:
                 self.placed = True
                 self.jump = False
 
             if self.jump:
+                # print("UPDATE DI JUMP DOMINO")
                 self.on_hover()
-        
+      
         else:
+            # print("UPDATE DI ELSE DOMINO")
             super().update()
             self.jump = True
 
-        print("UPDATE")
+        # print("UPDATE DI UPDATE")
         self.x, self.y = x, y
 
     def extra_dominoes_is_empty(self):
@@ -273,15 +237,9 @@ class Domino(GameObject):
         self.y -= pixels_to_move
         print("DI HOVER")
         
-        bound_height = self.bounding_box.top + (abs(self.bounding_box.bottom))
-        # new_height = self.rect.height + pixels_to_move*2
-        new_height = bound_height + pixels_to_move*2
-        bound_height = new_height
-        # print(f"bound height before + pixels_to_move*2: {bound_height}")
-        # print(f"bound height after + pixels_to_move*2: {bound_height}")
-        # self.rect.center = (self.x, self.y) # IKI DIGANTII LEK WES DIHAPUS YOO KOMEN E 
-        self.x = self.bounding_box.right
-        self.y = self.bounding_box.top
+        new_height = self.object_rect.height + pixels_to_move*2
+        self.object_rect.height = new_height
+        self.object_rect.center = (self.x, self.y)
         self.jump = False
 
     def sum_vals(self):
@@ -290,9 +248,12 @@ class Domino(GameObject):
     def click_me(self):
         if self.in_screen:
             mouse_position = pygame.mouse.get_pos()
-            return self.is_colliding(mouse_position)
-        return False
-
+            print(f"mouse_position: {mouse_position}")
+            if self.object_rect.collidepoint(mouse_position):
+                print("domino clicked!")
+                return True
+            else:
+                return False
     def __repr__(self):
         return str(list(self.vals))
 
@@ -306,7 +267,7 @@ class Button(GameObject):
         self.in_screen = False
 
         super().__init__(img_path=os.path.join("assets", "Dominos (Interface)", self.path1), x_scale=20, y_scale=20, orientation=0)
-        self.rect = super().give_rect()
+        self.object_rect = super().give_rect()
 
     def add_position(self, x, y):
         super().add_position(x, y)
@@ -314,7 +275,7 @@ class Button(GameObject):
     def change_orientation_sprite(self):
         super().change_orientation(180)
 
-    def show(self):
+    def activate(self):
         self.in_screen = True
         super().show()
 
@@ -332,20 +293,14 @@ class Button(GameObject):
             
         super().update()
 
-    # def click_me(self):
-    #     if self.in_screen:
-    #         mouse_position = pygame.mouse.get_pos()
-    #         if self.rect.collidepoint(mouse_position):
-    #             return True
-    #         else:
-    #             return False
-
     def click_me(self):
         if self.in_screen:
             mouse_position = pygame.mouse.get_pos()
-            # print(f"mouse_position: {mouse_position}")
-            return self.is_colliding(mouse_position)
-        return False
+            if self.object_rect.collidepoint(mouse_position):
+                print("domino clicked!")
+                return True
+            else:
+                return False
 
 class Player:
     def __init__(self, num, manual=True):

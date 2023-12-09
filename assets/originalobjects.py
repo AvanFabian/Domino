@@ -37,6 +37,7 @@ class GameObject(pygame.sprite.Sprite):
         self.image = pygame.transform.rotate(self.image, self.orientation)
         # print(f"self.image: {self.image}")
         self.rect = self.image.get_rect()
+        # print(f"self.rect: {self.rect}")
 
         if self.change_vals:
             self.change_orientation(180)
@@ -50,14 +51,15 @@ class GameObject(pygame.sprite.Sprite):
 
     def update(self):
         self.refresh_sprite()
+        # print(f"self.x = {self.x}, self.y = {self.y}")
         self.rect.center = (self.x, self.y) 
 
     def is_colliding(self, position):
-        
         if self.rect.collidepoint(position):
             print("colliding!")
             return True
         else:
+            # print("not colliding")
             return False
     
     def change_sprite(self, path):
@@ -85,7 +87,7 @@ class GameObject(pygame.sprite.Sprite):
         return self.rect
     
     def give_position(self):
-        print(f"self.x = {self.x}, self.y = {self.y}")
+        # print(f"self.x = {self.x}, self.y = {self.y}")
         return self.x, self.y
 
     def destroy(self):
@@ -173,9 +175,10 @@ class Domino(GameObject):
                 self.on_hover()
         
         else:
+            # print("UPDATE")
             super().update()
             self.jump = True
-
+        # print("UPDATE")
         self.x, self.y = x, y
 
     def extra_dominoes_is_empty(self):
