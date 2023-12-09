@@ -185,6 +185,7 @@ class Domino(GameObject):
         self.empty = True
 
     def on_hover(self):
+        print("on_hover domino")
         pixels_to_move = 2
         self.y -= pixels_to_move
 

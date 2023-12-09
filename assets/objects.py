@@ -18,10 +18,10 @@ def rotate_texture(angle):
     glRotatef(angle, 0, 0, 0) 
     glPopMatrix()
 
-# def convert_coordinates(mouse_coord):
-#     opengl_x = (mouse_coord[0] - WIDTH / 2) * (2 / WIDTH) * 1400
-#     opengl_y = (HEIGHT / 2 - mouse_coord[1]) * (2 / HEIGHT) * 800
-#     return opengl_x, opengl_y
+def convert_coordinates(mouse_coord):
+    opengl_x = (mouse_coord[0] - WIDTH / 2) * (2 / WIDTH) * 1400
+    opengl_y = (HEIGHT / 2 - mouse_coord[1]) * (2 / HEIGHT) * 800
+    return opengl_x, opengl_y
 
 
 class GameObject(pygame.sprite.Sprite):
@@ -82,8 +82,9 @@ class GameObject(pygame.sprite.Sprite):
         self.height = img_height
         self.image = scale_texture(self.width*self.x_scale, self.height*self.y_scale)
         self.image = rotate_texture(self.orientation)
-        self.object_rect = img_rect
-        # print(f"self.object_rect: {self.object_rect}") 
+        self.object_rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        # print(f"self.x, self.y: ({self.x}, {self.y})")
+        # print(f"self.object_rect: {self.object_rect}")
 
         if self.change_vals:
             self.change_orientation(180)
@@ -93,16 +94,22 @@ class GameObject(pygame.sprite.Sprite):
 
     def refresh_sprite(self):
         self.image = scale_texture(self.width*self.x_scale, self.height*self.y_scale)
-        # self.bounding_box = BoundingBox(-self.width / 2, self.width / 2, -self.height / 2, self.height / 2)
-        self.object_rect = img_rect
+        # self.object_rect = img_rect
+        self.object_rect = pygame.Rect(self.x, self.y, self.width, self.height)
 
     def update(self):
         self.refresh_sprite()
-        print(f"self.x = {self.x}, self.y = {self.y}")
+        # mouse_position = pygame.mouse.get_pos()
+        # GlCoord = convert_coordinates(mouse_position)
+        # print(f"Mouse pos_OpenGL: {GlCoord}")
+        # print(f"self.x = {self.x}, self.y = {self.y}")
         # self.object_rect.center = (img_width, img_height)
         self.object_rect.center = (self.x, self.y)
 
     def is_colliding(self, position):
+        # self.object_rect = img_rect
+        # print(f"self.object_rect: {self.object_rect}")
+        # print(f"collide point: {position}")
         if self.object_rect.collidepoint(position):
             print("colliding!")
             return True
@@ -128,7 +135,7 @@ class GameObject(pygame.sprite.Sprite):
     def change_orientation(self, new_orientation):
         self.orientation = new_orientation
         self.image = rotate_texture(self.orientation)
-        self.object_rect = img_rect
+        self.object_rect = pygame.Rect(self.x, self.y, self.width, self.height)
 
     def give_rect(self):
         return self.object_rect
@@ -211,7 +218,9 @@ class Domino(GameObject):
 
     def update(self):
         x, y = super().give_position()
-        if super().is_colliding(pygame.mouse.get_pos()) and self.placed == False and self.in_screen == True:
+        mouse_position = pygame.mouse.get_pos()
+        GlCoord = convert_coordinates(mouse_position)
+        if super().is_colliding(GlCoord) and self.placed == False and self.in_screen == True:
             # print("UPDATE DI COLLIDING DOMINO")
             if self.empty:
                 self.placed = True
@@ -233,9 +242,9 @@ class Domino(GameObject):
         self.empty = True
 
     def on_hover(self): # on_hover = ketika domino di hover
+        print("on_hover domino")
         pixels_to_move = 2 # pixels to move is the amount of pixels the domino will move when hovered
         self.y -= pixels_to_move
-        print("DI HOVER")
         
         new_height = self.object_rect.height + pixels_to_move*2
         self.object_rect.height = new_height
@@ -248,8 +257,9 @@ class Domino(GameObject):
     def click_me(self):
         if self.in_screen:
             mouse_position = pygame.mouse.get_pos()
-            print(f"mouse_position: {mouse_position}")
-            if self.object_rect.collidepoint(mouse_position):
+            # print(f"mouse_position: {mouse_position}")
+            GlCoord = convert_coordinates(mouse_position)
+            if self.object_rect.collidepoint(GlCoord):
                 print("domino clicked!")
                 return True
             else:
@@ -284,8 +294,10 @@ class Button(GameObject):
         super().hide()
 
     def update(self):
+        mouse_position = pygame.mouse.get_pos()
+        GlCoord = convert_coordinates(mouse_position)
         if self.in_screen:
-            if super().is_colliding(pygame.mouse.get_pos()):
+            if super().is_colliding(GlCoord):
                 super().change_sprite(os.path.join("assets", "Dominos (Interface)", self.path2))
 
             else:
@@ -296,8 +308,9 @@ class Button(GameObject):
     def click_me(self):
         if self.in_screen:
             mouse_position = pygame.mouse.get_pos()
-            if self.object_rect.collidepoint(mouse_position):
-                print("domino clicked!")
+            GlCoord = convert_coordinates(mouse_position)
+            if self.object_rect.collidepoint(GlCoord):
+                print("button clicked!")
                 return True
             else:
                 return False
