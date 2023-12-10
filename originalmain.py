@@ -311,6 +311,8 @@ class Table():
             domino.view_vertical()
             
         self.table_dominoes = np.insert(self.table_dominoes, 0, domino)
+        print(f"self.left_iterator: {self.left_iterator}")
+        print(f"self.left_positions[self.left_iterator]: {self.left_positions[self.left_iterator]}")
         x, y = self.left_positions[self.left_iterator][0], self.left_positions[self.left_iterator][1]
         domino.add_position(x, y)
 
@@ -338,6 +340,8 @@ class Table():
             domino.view_vertical()
 
         self.table_dominoes = np.append(self.table_dominoes, domino)
+        print(f"self.right_iterator: {self.right_iterator}")
+        print(f"self.right_positions[self.right_iterator]: {self.right_positions[self.right_iterator]}")
         x, y = self.right_positions[self.right_iterator][0], self.right_positions[self.right_iterator][1]
         domino.add_position(x, y)
 

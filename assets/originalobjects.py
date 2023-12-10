@@ -56,7 +56,7 @@ class GameObject(pygame.sprite.Sprite):
 
     def is_colliding(self, position):
         if self.rect.collidepoint(position):
-            print("colliding!")
+            # print("colliding!")
             return True
         else:
             # print("not colliding")
@@ -185,7 +185,7 @@ class Domino(GameObject):
         self.empty = True
 
     def on_hover(self):
-        print("on_hover domino")
+        # print("on_hover domino")
         pixels_to_move = 2
         self.y -= pixels_to_move
 
@@ -249,12 +249,12 @@ class Button(GameObject):
     def click_me(self):
         if self.in_screen:
             mouse_position = pygame.mouse.get_pos()
-            print(f"mouse_position: {mouse_position}")
+            # print(f"mouse_position: {mouse_position}")
             if self.rect.collidepoint(mouse_position):
-                print("button originalobjects.py clicked!")
+                # print("button originalobjects.py clicked!")
                 return True
             else:
-                print("button originalobjects.py not clicked!")
+                # print("button originalobjects.py not clicked!")
                 return False
 
 
