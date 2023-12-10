@@ -8,9 +8,6 @@ from constants import *
 
 # domino_area = pygame.Rect(-1257, -637, 58, 96)
 
-# Global dictionary to store loaded textures
-texture_cache = {}
-
 def scale_texture(scaleX, scaleY):
     glPushMatrix()
     glScalef(scaleX, scaleY, 1)
@@ -25,7 +22,6 @@ def convert_coordinates(mouse_coord):
     opengl_x = (mouse_coord[0] - WIDTH / 2) * (2 / WIDTH) * 1400
     opengl_y = (HEIGHT / 2 - mouse_coord[1]) * (2 / HEIGHT) * 800
     return opengl_x, opengl_y
-
 
 class GameObject(pygame.sprite.Sprite):
     def __init__(self, x=0, y=0, layer=0, x_scale=1, y_scale=1, orientation=0, img_path=os.path.join("assets", "empty.png"), img_width=0, img_height=0):
@@ -47,7 +43,7 @@ class GameObject(pygame.sprite.Sprite):
     
     def load_texture(self, image_path):
         global img_width, img_height
-        textureSurface = pygame.image.load(image_path).convert_alpha()
+        textureSurface = pygame.image.load(image_path)
         textureData = pygame.image.tostring(textureSurface, "RGBA", 1)
         img_width = textureSurface.get_width()
         img_height = textureSurface.get_height()
