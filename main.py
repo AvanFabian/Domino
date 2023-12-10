@@ -38,16 +38,41 @@ def load_texture(image_path):
 
     return textureId
 
+def render_text(text, font, text_color, background_color):
+    text_surface = font.render(text, True, text_color, background_color)
+    text_data = pygame.image.tostring(text_surface, "RGBA", 1)
+    width, height = text_surface.get_width(), text_surface.get_height()
+    print(f"width: {width}, height: {height}")
 
-# digunakan untuk menampilkan texture KHUSUS BACKGROUND
-# def display_bg_texture(jenis_texture):
-#     glEnable(GL_TEXTURE_2D)
-#     glBindTexture(GL_TEXTURE_2D, jenis_texture)
-#     glPushMatrix()
-#     glTranslatef(0.0, 0.0, 0.0)  # Adjust the z-coordinate to place the button in front of the background
-#     glScalef(TableXSize, TableYSize, 0)  # Scaling background hingga sesuai dengan ukuran window
-#     cube()
-#     glPopMatrix()
+    texture = glGenTextures(1)
+    glBindTexture(GL_TEXTURE_2D, texture)
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RGBA,
+        width,
+        height,
+        0,
+        GL_RGBA,
+        GL_UNSIGNED_BYTE,
+        text_data,
+    )
+    return texture, width, height
+
+def display_text(posX, posY, scaleX, scaleY, texture, width, height):
+    glBindTexture(GL_TEXTURE_2D, texture)
+    glEnable(GL_TEXTURE_2D)
+    glBegin(GL_QUADS)
+    glTexCoord2f(0, 0)
+    glVertex3f(posX, posY, 0)
+    glTexCoord2f(1, 0)
+    glVertex3f(posX + scaleX, posY, 0)
+    glTexCoord2f(1, 1)
+    glVertex3f(posX + scaleX, posY + scaleY, 0)
+    glTexCoord2f(0, 1)
+    glVertex3f(posX, posY + scaleY, 0)
+    glEnd()
+    glDisable(GL_TEXTURE_2D)
 
 def display_bg_texture(path):
     jenis_texture = load_texture(path)
@@ -131,14 +156,14 @@ def display_init():
     PLAYER__ = f"assets/Dominos (Interface)/jugador#.png" # PRoses gambar player menjadi texture
 
     SLEEP_TIME = .16
-    PLAYER__scale = (1.4, 0.6)
-    PLAYER__pos = (-9.5, -3.45) # TAk GANTI
-    PLAYER_NUM_scale = (0.5, 0.6)
-    PLAYER_NUM_pos = (-7.55, -3.45)
-    can_play_pos = (2, 6.15)
-    can_play_scale = (0.15, 0.15)
-    turn_pos = (0, 6.15)
-    turn_pos_scale = (1.6, 0.5)
+    PLAYER__scale = (185, 75) # skala teks player
+    PLAYER__pos = (-1185, -415) # posisi teks player
+    PLAYER_NUM_scale = (55, 67) # skala teks jumlah kartu pemain
+    PLAYER_NUM_pos = (-925, -415) # posisi teks jumlah kartu pemain
+    can_play_pos = (-725, -415)
+    can_play_scale = (125, 55)
+    turn_pos = (0, 725)
+    turn_pos_scale = (125, 60)
 
     # WINDOW.blit(BACKGROUND, (0, 0))
     display_bg_texture(BACKGROUND)
@@ -344,6 +369,8 @@ class Table():
         self.side = ""
         left = self.table_dominoes[0].vals[0]
         right = self.table_dominoes[-1].vals[-1]
+        print(f"left: {left}")
+        print(f"right: {right}")
 
         if left in domino.vals: self.side = "left"
         if right in domino.vals: self.side = "right"
@@ -560,10 +587,10 @@ class Table():
             self.left_arrow.change_orientation_sprite()
             self.left_arrow_orientation = False
 
-        self.right_arrow.add_position(-255, -437)
-        self.left_arrow.add_position(-305, -437)
-        self.right_arrow.show()
-        self.left_arrow.show()
+        self.right_arrow.add_position(-255, -0)
+        self.left_arrow.add_position(-305, -0)
+        self.right_arrow.activate()
+        self.left_arrow.activate()
 
         if self.left_arrow not in OBJECTS and self.right_arrow not in OBJECTS:
             OBJECTS.insert(1, self.left_arrow)
@@ -1202,22 +1229,26 @@ def run():
 
     if gameManager.You_Win:
         GAME_FINISHED_SOUND.play()
-        text = font.render(f"Pemain #{gameManager.winner.num + 1} Adalah Pemenang!", True, text_color, bck_color)
-        
-        textRect = text.get_rect()
-        textRect.center = (WIDTH // 2, 66)
-
-        WINDOW.blit(text, textRect)
-
+        # text = font.render(f"Pemain #{gameManager.winner.num + 1} Adalah Pemenang!", True, text_color, bck_color)
+        # textRect = text.get_rect()
+        # textRect.center = (WIDTH // 2, 66)
+        # WINDOW.blit(text, textRect)
+        # Modify this block to use PyOpenGL for rendering text
+        text = f"Pemain #{gameManager.winner.num + 1} Adalah Pemenang!"
+        texture, width, height = render_text(text, font, text_color, bck_color)
+        display_text(WIDTH // 2 - width / 2, 66, width, height, texture, width, height)
         y_padding = 120
-        for player in PLAYERS:
-            points = font.render(f"Sisa Kartu Pemain #{player.num + 1} : {player.count_tiles()}", True, text_color, bck_color)
-        
-            textRect2 = points.get_rect()
-            textRect2.center = (WIDTH // 2, y_padding)
-            y_padding += 30
 
-            WINDOW.blit(points, textRect2)
+        for player in PLAYERS:
+            # points = font.render(f"Sisa Kartu Pemain #{player.num + 1} : {player.count_tiles()}", True, text_color, bck_color)
+            # textRect2 = points.get_rect()
+            # textRect2.center = (WIDTH // 2, y_padding)
+            # y_padding += 30
+            # WINDOW.blit(points, textRect2)
+            text = f"Pemain #{player.num + 1}: {player.points}"
+            texture, width, height = render_text(text, font, text_color, bck_color)
+            display_text(WIDTH // 2, y_padding, 1, 1, texture, width, height)
+            y_padding += 30
 
         y_padding += 30
         if table.capicua() and gameManager.winner.count_tiles() == 0:

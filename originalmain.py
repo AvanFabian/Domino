@@ -228,7 +228,9 @@ class Table():
         self.side = ""
         left = self.table_dominoes[0].vals[0]
         right = self.table_dominoes[-1].vals[-1]
-
+        print(f"left: {left}")
+        print(f"right: {right}")
+    
         if left in domino.vals: self.side = "left"
         if right in domino.vals: self.side = "right"
         if right in domino.vals and left in domino.vals:
